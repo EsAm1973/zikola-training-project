@@ -1,0 +1,47 @@
+import 'dart:ui';
+
+abstract class AppColors {
+  static const Color primary = Color(0xFFF83758);
+
+  static const Color secondary = Color(0xFF4392F9);
+
+  static const Color background = Color(0xFFFDFDFD);
+
+  static const Color surface = Color(0xFFFFFFFF);
+
+  static const Color error = Color(0xFFEB3030);
+
+  static const Color onPrimary = Color(0xFFFFFFFF);
+
+  static const Color onSecondary = Color(0xFFFFFFFF);
+
+  static const Color onBackground = Color(0xFF000000);
+
+  static const Color onSurface = Color(0xFF000000);
+
+  static const Color onError = Color(0xFFFFFFFF);
+
+  static const Color darkBackground = Color(0xFF21003D);
+
+  static const Color darkSurface = Color(0xFF1A4E7D);
+
+  static const Color darkPrimary = Color(0xFFF83758);
+
+  static const Color onDarkPrimary = Color(0xFFFFFFFF);
+
+  static const Color onDarkBackground = Color(0xFFFFFFFF);
+
+  static const Color onDarkSurface = Color(0xFFFFFFFF);
+
+  static const Color primaryYellow = Color(0xFFEDB310);
+
+  static const Color grey4 = Color(0xFFBBBBBB);
+
+  static const Color mediumGray2 = Color(0xFF808488);
+
+  static const Color textGrey = Color(0xFFA7A7A7);
+
+  static const Color scrollbarGrey = Color(0xFFE9E9E9);
+
+  static const Color transparentRed = Color(0x00FF6768);
+}
