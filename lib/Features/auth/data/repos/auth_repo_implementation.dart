@@ -33,4 +33,26 @@ class AuthRepoImplementation implements AuthRepo {
       return Left(ServerFailure(errorMessage: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await apiConsumer.post(
+        ApiEndpoints.login,
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+      return Right(response);
+    } catch (e) {
+      if (e is Failure) {
+        return Left(e);
+      }
+      return Left(ServerFailure(errorMessage: e.toString()));
+    }
+  }
 }

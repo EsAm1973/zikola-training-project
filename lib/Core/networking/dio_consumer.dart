@@ -10,7 +10,7 @@ class DioConsumer implements ApiConsumer {
 
   DioConsumer({required this.dio}) {
     dio.options.baseUrl = ApiEndpoints.baseUrl;
-    dio.interceptors.add(ApiInterceptors());
+    dio.interceptors.add(ApiInterceptors(dio));
     dio.interceptors.add(
       PrettyDioLogger(
         request: true,

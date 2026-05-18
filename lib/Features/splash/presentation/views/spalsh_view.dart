@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zikola_training_project/Core/routing/app_routes.dart';
+import 'package:zikola_training_project/Core/services/getit_service.dart';
+import 'package:zikola_training_project/Core/services/shared_preferences_service.dart';
 import 'package:zikola_training_project/generated/assets.dart';
 
 class SplashView extends StatefulWidget {
@@ -19,11 +21,15 @@ class _SplashViewState extends State<SplashView> {
   }
 
   void navigateToNextScreen() async {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        GoRouter.of(context).pushReplacement(AppRoutes.kOnboardingView);
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      final isLoggedIn = getit<SharedPreferencesService>().isLoggedIn();
+      if (isLoggedIn) {
+        GoRouter.of(context).pushReplacement(AppRoutes.kHomeView);
+      } else {
+        GoRouter.of(context).pushReplacement(AppRoutes.kLoginRoute); // Or Onboarding depending on logic, let's use Login for now. Or better, Onboarding if not seen, but we don't have seen_onboarding. Let's do Login as requested.
       }
-    });
+    }
   }
 
   @override

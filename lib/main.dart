@@ -8,7 +8,7 @@ import 'package:zikola_training_project/generated/l10n.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  setupGetIt();
+  await setupGetIt();
   runApp(const ZikolaTrainingProject());
 }
 

@@ -9,6 +9,7 @@ import 'package:zikola_training_project/Features/auth/presentation/views/login_v
 import 'package:zikola_training_project/Features/auth/presentation/views/signup_view.dart';
 import 'package:zikola_training_project/Features/onboarding/presentation/views/onboarding_view.dart';
 import 'package:zikola_training_project/Features/splash/presentation/views/spalsh_view.dart';
+import 'package:zikola_training_project/Features/home/presentation/views/home_view.dart';
 
 abstract class AppRouter {
   static final router = GoRouter(
@@ -35,6 +36,10 @@ abstract class AppRouter {
       GoRoute(
         path: AppRoutes.kForgetPasswordRoute,
         builder: (context, state) => const ForgetPassView(),
+      ),
+      GoRoute(
+        path: AppRoutes.kHomeView,
+        builder: (context, state) => const HomeView(),
       ),
     ],
   );
