@@ -1,20 +1,24 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:zikola_training_project/Core/networking/api_endpoints.dart';
-import 'package:zikola_training_project/Core/routing/app_router.dart';
-import 'package:zikola_training_project/Core/routing/app_routes.dart';
 import 'package:zikola_training_project/Core/services/getit_service.dart';
 import 'package:zikola_training_project/Core/services/secure_storage_service.dart';
 import 'package:zikola_training_project/Core/services/shared_preferences_service.dart';
 
 class ApiInterceptors extends Interceptor {
   final Dio dio;
-  Completer<bool>? _refreshCompleter;
+
+  // ✅ static عشان نضمن إن في refresh واحد بس في أي وقت
+  // حتى لو في أكتر من instance من الـ interceptor
+  static Completer<bool>? _refreshCompleter;
 
   ApiInterceptors(this.dio);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final secureStorage = getit<SecureStorageService>();
     final accessToken = await secureStorage.getAccessToken();
     if (accessToken != null) {
@@ -24,18 +28,12 @@ class ApiInterceptors extends Interceptor {
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    super.onResponse(response, handler);
-  }
-
-  @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
       if (_refreshCompleter != null) {
-        // A refresh is already in progress, wait for it
+        // Refresh شغال بالفعل، استنى النتيجة
         final success = await _refreshCompleter!.future;
         if (success) {
-          // Retry this request
           final secureStorage = getit<SecureStorageService>();
           final accessToken = await secureStorage.getAccessToken();
           err.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
@@ -51,7 +49,7 @@ class ApiInterceptors extends Interceptor {
       }
 
       _refreshCompleter = Completer<bool>();
-      
+
       final secureStorage = getit<SecureStorageService>();
       final refreshToken = await secureStorage.getRefreshToken();
 
@@ -69,8 +67,16 @@ class ApiInterceptors extends Interceptor {
           data: {'refreshToken': refreshToken},
         );
 
-        final newAccessToken = response.data['access_token'];
-        final newRefreshToken = response.data['refresh_token'];
+        // ✅ Null safety: نتأكد من الـ tokens قبل ما نحفظهم
+        final newAccessToken = response.data['access_token'] as String?;
+        final newRefreshToken = response.data['refresh_token'] as String?;
+
+        if (newAccessToken == null || newRefreshToken == null) {
+          _refreshCompleter!.complete(false);
+          _refreshCompleter = null;
+          _performLogout();
+          return handler.next(err);
+        }
 
         await secureStorage.saveTokens(
           accessToken: newAccessToken,
@@ -80,11 +86,10 @@ class ApiInterceptors extends Interceptor {
         _refreshCompleter!.complete(true);
         _refreshCompleter = null;
 
-        // Retry original request
+        // Retry الـ request الأصلي
         err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
         final retryResponse = await dio.fetch(err.requestOptions);
         return handler.resolve(retryResponse);
-
       } catch (e) {
         _refreshCompleter!.complete(false);
         _refreshCompleter = null;
@@ -92,12 +97,36 @@ class ApiInterceptors extends Interceptor {
         return handler.next(err);
       }
     }
+
     return super.onError(err, handler);
   }
 
+  /// ✅ بدل Navigation مباشرة، بنستخدم Stream عشان نفصل
+  /// الـ interceptor عن الـ UI layer
   void _performLogout() {
     getit<SecureStorageService>().clearTokens();
-    getit<SharedPreferencesService>().setLoggedIn(false);
-    AppRouter.router.go(AppRoutes.kLoginRoute);
+    getit<SharedPreferencesService>().clearAuthData();
+    // ✅ نطلق event عبر stream بدل ما نعمل navigation مباشرة
+    AuthEventBus.instance.addEvent(AuthEvent.logout);
   }
+}
+
+/// Stream-based event bus للـ auth events
+enum AuthEvent { logout }
+
+class AuthEventBus {
+  AuthEventBus._();
+  static final AuthEventBus instance = AuthEventBus._();
+
+  final _controller = StreamController<AuthEvent>.broadcast();
+
+  Stream<AuthEvent> get stream => _controller.stream;
+
+  void addEvent(AuthEvent event) {
+    if (!_controller.isClosed) {
+      _controller.add(event);
+    }
+  }
+
+  void dispose() => _controller.close();
 }

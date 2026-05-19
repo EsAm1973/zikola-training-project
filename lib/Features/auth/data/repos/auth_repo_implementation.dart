@@ -2,12 +2,22 @@ import 'package:dartz/dartz.dart';
 import 'package:zikola_training_project/Core/errors/failure.dart';
 import 'package:zikola_training_project/Core/networking/api_consumer.dart';
 import 'package:zikola_training_project/Core/networking/api_endpoints.dart';
+import 'package:zikola_training_project/Core/services/secure_storage_service.dart';
+import 'package:zikola_training_project/Core/services/shared_preferences_service.dart';
 import 'package:zikola_training_project/Features/auth/data/repos/auth_repo.dart';
 
 class AuthRepoImplementation implements AuthRepo {
   final ApiConsumer apiConsumer;
+  // ✅ الـ services بتيجي عن طريق الـ constructor مش عن طريق GetIt مباشرة
+  final SecureStorageService secureStorageService;
+  final SharedPreferencesService sharedPreferencesService;
 
-  AuthRepoImplementation(this.apiConsumer);
+  AuthRepoImplementation(
+    this.apiConsumer,
+    this.secureStorageService,
+    this.sharedPreferencesService,
+  );
+
   @override
   Future<Either<Failure, Map<String, dynamic>>> register({
     required String name,
@@ -27,9 +37,7 @@ class AuthRepoImplementation implements AuthRepo {
       );
       return Right(response);
     } catch (e) {
-      if (e is Failure) {
-        return Left(e);
-      }
+      if (e is Failure) return Left(e);
       return Left(ServerFailure(errorMessage: e.toString()));
     }
   }
@@ -42,16 +50,28 @@ class AuthRepoImplementation implements AuthRepo {
     try {
       final response = await apiConsumer.post(
         ApiEndpoints.login,
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
-      return Right(response);
-    } catch (e) {
-      if (e is Failure) {
-        return Left(e);
+
+      // ✅ Null safety صح
+      final accessToken = response['access_token'] as String?;
+      final refreshToken = response['refresh_token'] as String?;
+
+      if (accessToken != null && refreshToken != null) {
+        // ✅ بنستخدم الـ injected services مش GetIt مباشرة
+        await secureStorageService.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
+        await sharedPreferencesService.setLoggedIn(true);
+        return Right(response);
+      } else {
+        return Left(
+          ServerFailure(errorMessage: 'Invalid tokens received from server.'),
+        );
       }
+    } catch (e) {
+      if (e is Failure) return Left(e);
       return Left(ServerFailure(errorMessage: e.toString()));
     }
   }

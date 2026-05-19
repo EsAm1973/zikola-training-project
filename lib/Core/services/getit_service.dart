@@ -13,17 +13,23 @@ Future<void> setupGetIt() async {
   // Register SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   getit.registerLazySingleton<SharedPreferencesService>(
-      () => SharedPreferencesService(prefs));
+    () => SharedPreferencesService(prefs),
+  );
 
   // Register SecureStorageService
   getit.registerLazySingleton<SecureStorageService>(
-      () => SecureStorageService());
+    () => SecureStorageService(),
+  );
 
   // Register DioConsumer as a singleton
   getit.registerLazySingleton<DioConsumer>(() => DioConsumer(dio: Dio()));
 
-  // Register AuthRepoImplementation as a singleton, injecting DioConsumer
+  // Register AuthRepoImplementation مع inject الـ services بشكل صح
   getit.registerLazySingleton<AuthRepo>(
-    () => AuthRepoImplementation(getit<DioConsumer>()),
+    () => AuthRepoImplementation(
+      getit<DioConsumer>(),
+      getit<SecureStorageService>(),
+      getit<SharedPreferencesService>(),
+    ),
   );
 }
