@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:zikola_training_project/Core/networking/api_interceptors.dart';
+import 'package:zikola_training_project/Core/routing/app_routes.dart';
 import 'package:zikola_training_project/Core/routing/app_router.dart';
 import 'package:zikola_training_project/Core/services/getit_service.dart';
 import 'package:zikola_training_project/Core/utils/app_theme.dart';
@@ -12,8 +15,31 @@ void main() async {
   runApp(const ZikolaTrainingProject());
 }
 
-class ZikolaTrainingProject extends StatelessWidget {
+class ZikolaTrainingProject extends StatefulWidget {
   const ZikolaTrainingProject({super.key});
+
+  @override
+  State<ZikolaTrainingProject> createState() => _ZikolaTrainingProjectState();
+}
+
+class _ZikolaTrainingProjectState extends State<ZikolaTrainingProject> {
+  late StreamSubscription<AuthEvent> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription = AuthEventBus.instance.stream.listen((event) {
+      if (event == AuthEvent.logout) {
+        AppRouter.router.go(AppRoutes.kLoginRoute);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

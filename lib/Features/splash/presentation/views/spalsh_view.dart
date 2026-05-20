@@ -27,7 +27,7 @@ class _SplashViewState extends State<SplashView> {
       if (isLoggedIn) {
         GoRouter.of(context).pushReplacement(AppRoutes.kHomeView);
       } else {
-        GoRouter.of(context).pushReplacement(AppRoutes.kLoginRoute); // Or Onboarding depending on logic, let's use Login for now. Or better, Onboarding if not seen, but we don't have seen_onboarding. Let's do Login as requested.
+        GoRouter.of(context).pushReplacement(AppRoutes.kLoginRoute);
       }
     }
   }

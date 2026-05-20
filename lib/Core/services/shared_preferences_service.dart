@@ -15,8 +15,6 @@ class SharedPreferencesService {
     return _prefs.getBool(_isLoggedInKey) ?? false;
   }
 
-  /// بدل clearAll اللي كانت بتمسح كل حاجة،
-  /// دلوقتي بنمسح كل key متعلق بالـ auth بس
   Future<void> clearAuthData() async {
     await _prefs.remove(_isLoggedInKey);
   }

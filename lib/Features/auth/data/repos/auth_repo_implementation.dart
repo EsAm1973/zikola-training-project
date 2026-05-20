@@ -8,7 +8,6 @@ import 'package:zikola_training_project/Features/auth/data/repos/auth_repo.dart'
 
 class AuthRepoImplementation implements AuthRepo {
   final ApiConsumer apiConsumer;
-  // ✅ الـ services بتيجي عن طريق الـ constructor مش عن طريق GetIt مباشرة
   final SecureStorageService secureStorageService;
   final SharedPreferencesService sharedPreferencesService;
 
@@ -53,12 +52,10 @@ class AuthRepoImplementation implements AuthRepo {
         data: {'email': email, 'password': password},
       );
 
-      // ✅ Null safety صح
       final accessToken = response['access_token'] as String?;
       final refreshToken = response['refresh_token'] as String?;
 
       if (accessToken != null && refreshToken != null) {
-        // ✅ بنستخدم الـ injected services مش GetIt مباشرة
         await secureStorageService.saveTokens(
           accessToken: accessToken,
           refreshToken: refreshToken,

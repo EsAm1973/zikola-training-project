@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zikola_training_project/Core/routing/app_routes.dart';
 import 'package:zikola_training_project/Core/services/getit_service.dart';
 import 'package:zikola_training_project/Features/auth/data/repos/auth_repo.dart';
+import 'package:zikola_training_project/Features/auth/presentation/manager/login/login_cubit.dart';
 import 'package:zikola_training_project/Features/auth/presentation/manager/register/register_cubit.dart';
 import 'package:zikola_training_project/Features/auth/presentation/views/forget_pass_view.dart';
 import 'package:zikola_training_project/Features/auth/presentation/views/login_view.dart';
@@ -24,7 +25,10 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.kLoginRoute,
-        builder: (context, state) => const LoginView(),
+        builder: (context, state) => BlocProvider(
+          create: (context) => LoginCubit(getit<AuthRepo>()),
+          child: const LoginView(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.kSignupRoute,
