@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:zikola_training_project/Core/networking/api_endpoints.dart';
 import 'package:zikola_training_project/Core/services/getit_service.dart';
 import 'package:zikola_training_project/Core/services/secure_storage_service.dart';
@@ -27,40 +26,40 @@ class ApiInterceptors extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    //debugPrint('❌ Error Status Code: ${err.response?.statusCode}');
+    //debugPrint('Error Status Code: ${err.response?.statusCode}');
 
     if (err.response?.statusCode == 401) {
-      //debugPrint('🔄 Access token expired -> starting refresh flow');
+      //debugPrint('Access token expired -> starting refresh flow');
 
       // if (_refreshCompleter != null) {
-      //   debugPrint('⏳ Waiting for existing refresh request...');
+      //   debugPrint('Waiting for existing refresh request...');
       // }
 
       if (_refreshCompleter != null) {
         final success = await _refreshCompleter!.future;
 
-        //debugPrint('✅ Existing refresh completed: $success');
+        //debugPrint('Existing refresh completed: $success');
 
         if (success) {
           final secureStorage = getit<SecureStorageService>();
           final accessToken = await secureStorage.getAccessToken();
 
-          //debugPrint('🚀 Retrying original request...');
+          //debugPrint('Retrying original request...');
 
           err.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
 
           try {
             final response = await dio.fetch(err.requestOptions);
 
-            //debugPrint('✅ Retried request success');
+            //debugPrint('Retried request success');
 
             return handler.resolve(response);
           } catch (e) {
-            //debugPrint('❌ Retried request failed: $e');
+            //debugPrint('Retried request failed: $e');
             return handler.next(err);
           }
         } else {
-          //debugPrint('❌ Refresh failed');
+          //debugPrint('Refresh failed');
           return handler.next(err);
         }
       }
@@ -70,10 +69,10 @@ class ApiInterceptors extends Interceptor {
       final secureStorage = getit<SecureStorageService>();
       final refreshToken = await secureStorage.getRefreshToken();
 
-      debugPrint('📌 Refresh Token: $refreshToken');
+      //debugPrint('Refresh Token: $refreshToken');
 
       if (refreshToken == null) {
-        debugPrint('❌ No refresh token found');
+        //debugPrint('No refresh token found');
 
         _refreshCompleter!.complete(false);
         _refreshCompleter = null;
@@ -83,7 +82,7 @@ class ApiInterceptors extends Interceptor {
       }
 
       try {
-        //debugPrint('📡 Calling refresh endpoint...');
+        //debugPrint('Calling refresh endpoint...');
 
         final refreshDio = Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl));
 
@@ -92,7 +91,7 @@ class ApiInterceptors extends Interceptor {
           data: {'refreshToken': refreshToken},
         );
 
-        //debugPrint('✅ Refresh response: ${response.data}');
+        //debugPrint('Refresh response: ${response.data}');
 
         final newAccessToken = response.data['access_token'] as String?;
 
@@ -103,22 +102,22 @@ class ApiInterceptors extends Interceptor {
           refreshToken: newRefreshToken!,
         );
 
-        //debugPrint('💾 New tokens saved successfully');
+        //debugPrint('New tokens saved successfully');
 
         _refreshCompleter!.complete(true);
         _refreshCompleter = null;
 
         err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
 
-        //debugPrint('🚀 Retrying original request after refresh');
+        //debugPrint('Retrying original request after refresh');
 
         final retryResponse = await dio.fetch(err.requestOptions);
 
-        //debugPrint('✅ Final request success');
+        //debugPrint('Final request success');
 
         return handler.resolve(retryResponse);
       } catch (e) {
-        //debugPrint('❌ Refresh process failed: $e');
+        //debugPrint('Refresh process failed: $e');
 
         _refreshCompleter!.complete(false);
         _refreshCompleter = null;
